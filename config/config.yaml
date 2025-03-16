@@ -5,8 +5,10 @@ api:
 database:
   type: postgres
   connection:
+    # If using the bundled postgres service, set POSTGRES_HOST=mcp-postgres
+    # If using your own postgres server outside Docker, set POSTGRES_HOST to your server's address
     hosts:
-      - ${POSTGRES_HOST:-postgres}
+      - ${POSTGRES_HOST:-localhost}
     user: ${POSTGRES_USER:-postgres}
     password: ${POSTGRES_PASSWORD:-password}
     database: ${POSTGRES_DB:-mydb}

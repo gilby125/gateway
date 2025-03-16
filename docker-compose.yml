@@ -5,6 +5,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.build
+    container_name: mcp-gateway
+    networks:
+      mcp_network:
+        # Optionally, you can set a static IP address
+        # ipv4_address: 172.28.1.1
     ports:
       - "8182:8182"
     volumes:
@@ -19,35 +24,45 @@ services:
     ]
     environment:
       - TZ=Etc/UTC
-      - POSTGRES_HOST=${POSTGRES_HOST:-postgres}
+      # For external PostgreSQL server, set POSTGRES_HOST to your server's address
+      # For bundled PostgreSQL service, use mcp-postgres
+      - POSTGRES_HOST=${POSTGRES_HOST:-localhost}
       - POSTGRES_PORT=${POSTGRES_PORT:-5432}
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
       - POSTGRES_DB=${POSTGRES_DB:-mydb}
-    depends_on:
-      postgres:
-        condition: service_healthy
     restart: unless-stopped
+    # If using the bundled postgres service, uncomment these lines:
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
 
-  postgres:
-    image: postgres:latest
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
-      POSTGRES_DB: ${POSTGRES_DB:-mydb}
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-mydb}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
+  # Optional: PostgreSQL service (comment out if using your own PostgreSQL server)
+  # postgres:
+  #   image: postgres:latest
+  #   container_name: mcp-postgres
+  #   networks:
+  #     - mcp_network
+  #   environment:
+  #     POSTGRES_USER: ${POSTGRES_USER:-postgres}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+  #     POSTGRES_DB: ${POSTGRES_DB:-mydb}
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-mydb}"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
+  #   restart: unless-stopped
 
   jaeger:
     image: jaegertracing/all-in-one:latest
+    container_name: mcp-jaeger
+    networks:
+      - mcp_network
     environment:
       COLLECTOR_OTLP_ENABLED: true
     ports:
@@ -55,5 +70,14 @@ services:
       - "4317:4317"
     restart: unless-stopped
 
-volumes:
-  postgres_data:
+# Uncomment this if you're using the bundled postgres service
+# volumes:
+#   postgres_data:
+
+networks:
+  mcp_network:
+    driver: bridge
+    # Optionally, you can define a custom subnet
+    # ipam:
+    #   config:
+    #     - subnet: 172.28.0.0/16
