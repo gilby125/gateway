@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.build
+    ports:
+      - "8182:8182"
+    volumes:
+      - ./config:/etc/gateway
+    command:
+      - start
+      - --config
+      - /etc/gateway/config.yaml
+      - --addr
+      - ":8182"
+      - rest
+    environment:
+      - TZ=Etc/UTC
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-mydb}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    environment:
+      COLLECTOR_OTLP_ENABLED: true
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
