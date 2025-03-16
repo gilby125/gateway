@@ -1,6 +1,6 @@
 FROM alpine:3.19
 
-ENV TZ=Etc/UTC, ROTATION_TZ=Etc/UTC
+ENV TZ=Etc/UTC ROTATION_TZ=Etc/UTC
 
 ENV DEBIAN_FRONTEND=noninteractive
 

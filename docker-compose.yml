@@ -9,17 +9,24 @@ services:
       - "8182:8182"
     volumes:
       - ./config:/etc/gateway
-    command:
-      - start
-      - --config
-      - /etc/gateway/config.yaml
-      - --addr
-      - ":8182"
-      - rest
+    command: [
+      "start",
+      "--config",
+      "/etc/gateway/config.yaml",
+      "--addr",
+      ":8182",
+      "rest"
+    ]
     environment:
       - TZ=Etc/UTC
+      - POSTGRES_HOST=${POSTGRES_HOST:-postgres}
+      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - POSTGRES_DB=${POSTGRES_DB:-mydb}
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
   postgres:
@@ -32,6 +39,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-mydb}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   jaeger:

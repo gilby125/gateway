@@ -1,0 +1,16 @@
+api:
+  name: "MCP Gateway API"
+  version: "1.0"
+
+database:
+  type: postgres
+  connection:
+    hosts:
+      - ${POSTGRES_HOST:-postgres}
+    user: ${POSTGRES_USER:-postgres}
+    password: ${POSTGRES_PASSWORD:-password}
+    database: ${POSTGRES_DB:-mydb}
+    port: ${POSTGRES_PORT:-5432}
+  
+  # Add your tables and endpoints configuration here as needed
+  # This is a minimal configuration to get the service running
